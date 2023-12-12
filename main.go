@@ -5,35 +5,74 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
+	"time"
 
-	"fyne.io/systray"
+	"github.com/getlantern/systray"
 )
 
-func requireCommand(name string) {
-	_, err := exec.LookPath(name)
+func requireCommand(name string) string {
+	absPath, err := exec.LookPath(name)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Required command not found:", name)
 		os.Exit(1)
 	}
+	return absPath
 }
 
+var asahiBlessCmd = requireCommand("asahi-bless")
+
 func main() {
-	requireCommand("asahi-bless")
-	requireCommand("pkexec")
+	_ = requireCommand("pkexec")
+
+	if len(os.Args) > 1 {
+		callAsahiBlessAndReboot(os.Args[1:])
+		return
+	}
 
 	systray.Run(onReady, func() {})
 }
 
+func callAsahiBlessAndReboot(args []string) {
+	{
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to set boot volume:", err)
+		}
+	}
+
+	time.Sleep(1 * time.Second)
+
+	{
+		cmd := exec.Command("reboot")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to reboot to macOS:", err)
+		}
+	}
+}
+
 func rebootToMacOS(onlyOnce bool) {
-	args := []string{"pkexec", "asahi-bless", "--set-boot-macos"}
+	exePath, err := os.Executable()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Failed to get executable path:", err)
+	}
+	args := []string{exePath, asahiBlessCmd, "--set-boot-macos", "-y"}
 	if onlyOnce {
 		args = append(args, "-n")
 	}
+	fmt.Printf("executing: pkexec %s\n", strings.Join(args, " "))
 	cmd := exec.Command("pkexec", args...)
-	err := cmd.Run()
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to reboot to macOS:", err)
-		os.Exit(1)
 	}
 }
 
@@ -42,7 +81,7 @@ var appIcon []byte
 
 func onReady() {
 	systray.SetTemplateIcon(appIcon, appIcon)
-	systray.SetTitle("Asahi Reboot Switcher")
+	// systray.SetTitle("Asahi Reboot Switcher")
 	systray.SetTooltip("Asahi Reboot Switcher")
 
 	mReboot := systray.AddMenuItem("Reboot to macOS...", "Reboot to macOS now")
