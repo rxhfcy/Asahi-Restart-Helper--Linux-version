@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN" "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>nohajc</vendor>
+  <vendor_url>https://github.com/nohajc/asahi-reboot-switcher</vendor_url>
+  <icon_name>asahi-reboot-switcher</icon_name>
+  <action id="asahi-reboot-switcher">
+    <description>Run Asahi Reboot Switcher as root</description>
+    <message>Authentication is required to run the Asahi Reboot Switcher as root</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/asahi-reboot-switcher</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>
