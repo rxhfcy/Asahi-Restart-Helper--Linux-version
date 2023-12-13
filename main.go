@@ -85,9 +85,8 @@ func onReady() {
 	systray.SetTooltip("Asahi Reboot Switcher")
 
 	mReboot := systray.AddMenuItem("Reboot to macOS...", "Reboot to macOS now")
-	systray.AddSeparator()
-	mOnlyOnce := systray.AddMenuItemCheckbox("Only once", "Reboot to macOS once", false)
-	mSetDefault := systray.AddMenuItemCheckbox("Set as default", "Boot to macOS by default", true)
+	mOnlyOnce := mReboot.AddSubMenuItem("Only once", "Reboot to macOS once")
+	mSetDefault := mReboot.AddSubMenuItem("Set as default", "Boot to macOS by default")
 	systray.AddSeparator()
 	mQuitOrig := systray.AddMenuItem("Quit", "Quit application")
 
@@ -95,17 +94,10 @@ func onReady() {
 		select {
 		case <-mReboot.ClickedCh:
 			fmt.Println("clicked Reboot to macOS")
-			rebootToMacOS(mOnlyOnce.Checked())
 		case <-mOnlyOnce.ClickedCh:
-			if !mOnlyOnce.Checked() {
-				mSetDefault.Uncheck()
-			}
-			mOnlyOnce.Check()
+			rebootToMacOS(true)
 		case <-mSetDefault.ClickedCh:
-			if !mSetDefault.Checked() {
-				mOnlyOnce.Uncheck()
-			}
-			mSetDefault.Check()
+			rebootToMacOS(false)
 		case <-mQuitOrig.ClickedCh:
 			fmt.Println("Quit")
 			systray.Quit()
