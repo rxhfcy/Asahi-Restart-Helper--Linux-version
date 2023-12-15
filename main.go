@@ -3,10 +3,12 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -23,6 +25,44 @@ func requireCommand(name string) string {
 }
 
 var asahiBlessCmd = requireCommand("asahi-bless")
+
+func setupAutostart(homeDir string) {
+	autostartDir := filepath.Join(homeDir, ".config", "autostart")
+	autostartFile := filepath.Join(autostartDir, "asahi-reboot-switcher.desktop")
+
+	// Check if the autostart file already exists
+	if _, err := os.Stat(autostartFile); os.IsNotExist(err) {
+		// Create the autostart directory if it doesn't exist
+		if err := os.MkdirAll(autostartDir, 0755); err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to create autostart directory:", err)
+			return
+		}
+
+		// Open the source file for reading
+		srcFile, err := os.Open("/usr/share/applications/asahi-reboot-switcher.desktop")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to open source file:", err)
+			return
+		}
+		defer srcFile.Close()
+
+		// Create the destination file for writing
+		dstFile, err := os.Create(autostartFile)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to create destination file:", err)
+			return
+		}
+		defer dstFile.Close()
+
+		// Copy the contents from the source file to the destination file
+		if _, err := io.Copy(dstFile, srcFile); err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to copy file contents:", err)
+			return
+		}
+
+		fmt.Println("Autostart file copied successfully.")
+	}
+}
 
 func main() {
 	currUser, err := user.Current()
@@ -42,6 +82,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Should not run as root, exiting...")
 		os.Exit(1)
 	}
+
+	setupAutostart(currUser.HomeDir)
 
 	systray.Run(onReady, func() {})
 }
@@ -107,7 +149,7 @@ func rebootToMacOS(onlyOnce bool) {
 	}
 }
 
-//go:embed macos-hdd.png
+//go:embed asahi-reboot-switcher.png
 var appIcon []byte
 
 func onReady() {

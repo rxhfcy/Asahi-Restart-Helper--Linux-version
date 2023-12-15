@@ -1,0 +1,7 @@
+[Desktop Entry]
+Exec=/usr/bin/asahi-reboot-switcher
+Icon=/usr/share/icons/asahi-reboot-switcher.png
+Name=Restart in macOS (tray icon)
+Path=
+Terminal=False
+Type=Application
