@@ -34,7 +34,7 @@ func main() {
 	_ = requireCommand("pkexec")
 
 	if len(os.Args) > 1 {
-		callAsahiBlessAndReboot(os.Args[1:])
+		callAsahiBless(os.Args[1:])
 		return
 	}
 
@@ -46,7 +46,22 @@ func main() {
 	systray.Run(onReady, func() {})
 }
 
-func callAsahiBlessAndReboot(args []string) {
+func requestReboot() error {
+	if os.Getenv("XDG_CURRENT_DESKTOP") == "KDE" {
+		cmd := exec.Command("qdbus", "org.kde.ksmserver", "/KSMServer", "logout", "1", "1", "3")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+
+	// fallback
+	cmd := exec.Command("pkexec", "reboot")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func callAsahiBless(args []string) {
 	{
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Stdout = os.Stdout
@@ -54,18 +69,6 @@ func callAsahiBlessAndReboot(args []string) {
 		err := cmd.Run()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Failed to set boot volume:", err)
-		}
-	}
-
-	time.Sleep(1 * time.Second)
-
-	{
-		cmd := exec.Command("reboot")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Failed to reboot to macOS:", err)
 		}
 	}
 }
@@ -86,6 +89,15 @@ func rebootToMacOS(onlyOnce bool) {
 	err = cmd.Run()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to reboot to macOS:", err)
+	}
+
+	time.Sleep(1 * time.Second)
+
+	{
+		err := requestReboot()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to reboot to macOS:", err)
+		}
 	}
 }
 
