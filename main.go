@@ -53,6 +53,12 @@ func requestReboot() error {
 		cmd.Stderr = os.Stderr
 		return cmd.Run()
 	}
+	if os.Getenv("XDG_CURRENT_DESKTOP") == "GNOME" {
+		cmd := exec.Command("gnome-session-quit", "--reboot")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
 
 	// fallback
 	cmd := exec.Command("pkexec", "reboot")
