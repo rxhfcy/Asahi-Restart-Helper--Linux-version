@@ -155,7 +155,7 @@ var appIcon []byte
 func onReady() {
 	systray.SetTemplateIcon(appIcon, appIcon)
 	// systray.SetTitle("Asahi Reboot Switcher")
-	systray.SetTooltip("Asahi Reboot Switcher")
+	systray.SetTooltip("Restart in macOS (tray icon)")
 
 	mReboot := systray.AddMenuItem("Restart in macOS...", "")
 	mOnlyOnce := mReboot.AddSubMenuItem("Only once", "")
