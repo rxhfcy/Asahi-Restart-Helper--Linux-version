@@ -3,8 +3,10 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 	"time"
 
@@ -23,11 +25,22 @@ func requireCommand(name string) string {
 var asahiBlessCmd = requireCommand("asahi-bless")
 
 func main() {
+	currUser, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Running as: %+v\n", currUser)
+
 	_ = requireCommand("pkexec")
 
 	if len(os.Args) > 1 {
 		callAsahiBlessAndReboot(os.Args[1:])
 		return
+	}
+
+	if currUser.Uid == "0" {
+		fmt.Fprintln(os.Stderr, "Should not run as root, exiting...")
+		os.Exit(1)
 	}
 
 	systray.Run(onReady, func() {})
