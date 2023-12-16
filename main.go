@@ -155,11 +155,12 @@ func (sc *SystrayContext) onReady() {
 
 	for _, v := range sc.volumes {
 		volMenuItem := systray.AddMenuItemCheckbox(v.ShortName(), "", v.Active)
+		volName := v.ShortName()
 		volIdx := v.Idx
 		go func() {
 			for range volMenuItem.ClickedCh {
 				if !volMenuItem.Checked() {
-					confirmed := dialog.Message("Change default startup disk to %s?", v.ShortName()).Title("Confirm startup disk change").YesNo()
+					confirmed := dialog.Message("Change default startup disk to %s?", volName).Title("Confirm startup disk change").YesNo()
 					if confirmed {
 						asahibless.SetBoot(volIdx)
 					}
