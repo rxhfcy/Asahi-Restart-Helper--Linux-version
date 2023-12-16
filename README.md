@@ -4,7 +4,7 @@ GUI for asahi-bless - reboot to macOS system tray menu
 ## Install dependencies
 
 ```
-sudo dnf install gcc make gtk3-devel libappindicator-gtk3-devel asahi-bless
+sudo dnf install make asahi-bless
 ```
 
 If asahi-bless version <= 0.2.1:
@@ -34,3 +34,7 @@ Launch `Restart in macOS (tray icon)` from application menu. Next time it will s
 ## Notes
 
 Tested in KDE and Gnome.
+
+### Gnome
+
+If the tray icon is rendered incorrectly (with a green tint), go to Extension Manager, open extension preferences of `AppIndicator and KStatusNotifierItem Support` and set brightness to max (1.0).

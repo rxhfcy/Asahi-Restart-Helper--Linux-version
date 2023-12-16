@@ -1,5 +1,5 @@
 asahi-reboot-switcher: main.go
-	go build -tags=legacy_appindicator
+	go build
 
 install: asahi-reboot-switcher
 	install -m 755 asahi-reboot-switcher /usr/bin/asahi-reboot-switcher

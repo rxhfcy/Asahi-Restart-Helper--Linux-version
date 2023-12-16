@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/systray"
+	"fyne.io/systray"
 )
 
 func requireCommand(name string) string {
