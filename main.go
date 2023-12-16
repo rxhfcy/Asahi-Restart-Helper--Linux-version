@@ -10,21 +10,12 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"fyne.io/systray"
+	"github.com/nohajc/asahi-reboot-switcher/asahibless"
+	"github.com/nohajc/asahi-reboot-switcher/util"
+	"github.com/sqweek/dialog"
 )
-
-func requireCommand(name string) string {
-	absPath, err := exec.LookPath(name)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Required command not found:", name)
-		os.Exit(1)
-	}
-	return absPath
-}
-
-var asahiBlessCmd = requireCommand("asahi-bless")
 
 func setupAutostart(homeDir string) {
 	autostartDir := filepath.Join(homeDir, ".config", "autostart")
@@ -69,9 +60,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Running as: %+v\n", currUser)
 
-	_ = requireCommand("pkexec")
+	_ = util.RequireCommand("pkexec")
 
 	if len(os.Args) > 1 {
 		callAsahiBless(os.Args[1:])
@@ -85,7 +75,13 @@ func main() {
 
 	setupAutostart(currUser.HomeDir)
 
-	systray.Run(onReady, func() {})
+	sctx := &SystrayContext{}
+	err = sctx.loadVolumes()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	systray.Run(sctx.onReady, func() {})
 }
 
 func requestReboot() error {
@@ -121,59 +117,100 @@ func callAsahiBless(args []string) {
 	}
 }
 
-func rebootToMacOS(onlyOnce bool) {
-	exePath, err := os.Executable()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed to get executable path:", err)
-	}
-	args := []string{exePath, asahiBlessCmd, "--set-boot-macos", "-y"}
-	if onlyOnce {
-		args = append(args, "-n")
-	}
-	fmt.Printf("executing: pkexec %s\n", strings.Join(args, " "))
-	cmd := exec.Command("pkexec", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed to reboot to macOS:", err)
-	}
-
-	time.Sleep(1 * time.Second)
-
-	{
-		err := requestReboot()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Failed to reboot to macOS:", err)
-		}
-	}
-}
-
 //go:embed asahi-reboot-switcher.png
 var appIcon []byte
 
-func onReady() {
+type SystrayContext struct {
+	volumes      []asahibless.Volume
+	volMenuItems []*systray.MenuItem
+}
+
+func (sc *SystrayContext) loadVolumes() error {
+	volumes, err := asahibless.ListVolumes()
+	sc.volumes = volumes
+	// fmt.Printf("Volumes: %#v\n", volumes)
+	for _, v := range volumes {
+		i := v.Idx - 1
+		if i >= len(sc.volMenuItems) {
+			continue
+		}
+		if v.Active {
+			sc.volMenuItems[i].Check()
+		} else {
+			sc.volMenuItems[i].Uncheck()
+		}
+	}
+	return err
+}
+
+func (sc *SystrayContext) onReady() {
 	systray.SetTemplateIcon(appIcon, appIcon)
 	// systray.SetTitle("Asahi Reboot Switcher")
 	systray.SetTooltip("Restart in macOS (tray icon)")
 
 	mReboot := systray.AddMenuItem("Restart in macOS...", "")
-	mOnlyOnce := mReboot.AddSubMenuItem("Only once", "")
-	mSetDefault := mReboot.AddSubMenuItem("Set as default", "")
+	systray.AddSeparator()
+	mLabel := systray.AddMenuItem("Default startup disk:", "")
+	mLabel.Disable()
+
+	for _, v := range sc.volumes {
+		volMenuItem := systray.AddMenuItemCheckbox(v.ShortName(), "", v.Active)
+		volIdx := v.Idx
+		go func() {
+			for range volMenuItem.ClickedCh {
+				if !volMenuItem.Checked() {
+					confirmed := dialog.Message("Change default startup disk to %s?", v.ShortName()).Title("Confirm startup disk change").YesNo()
+					if confirmed {
+						asahibless.SetBoot(volIdx)
+					}
+				}
+				sc.loadVolumes()
+			}
+		}()
+		sc.volMenuItems = append(sc.volMenuItems, volMenuItem)
+	}
+
 	systray.AddSeparator()
 	mQuitOrig := systray.AddMenuItem("Quit", "Quit application")
 
 	for {
 		select {
 		case <-mReboot.ClickedCh:
-			fmt.Println("clicked Reboot to macOS")
-		case <-mOnlyOnce.ClickedCh:
-			rebootToMacOS(true)
-		case <-mSetDefault.ClickedCh:
-			rebootToMacOS(false)
+			sc.rebootToMacOS()
 		case <-mQuitOrig.ClickedCh:
 			fmt.Println("Quit")
 			systray.Quit()
+		}
+	}
+}
+
+func (sc *SystrayContext) isMacOSActive() bool {
+	for _, v := range sc.volumes {
+		if v.Active && strings.Contains(v.ShortName(), "Macintosh") {
+			return true
+		}
+	}
+	return false
+}
+
+func (sc *SystrayContext) rebootToMacOS() {
+	if !sc.isMacOSActive() { // TODO: also check if override not already set - isMacOSNext()
+		fmt.Println("macOS is not active, setting next boot override...")
+		err := asahibless.SetBootMacOS(true)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return
+		}
+	} else {
+		fmt.Println("macOS is already active, rebooting...")
+	}
+
+	// time.Sleep(1 * time.Second)
+
+	{
+		err := requestReboot()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to reboot to macOS:", err)
 		}
 	}
 }

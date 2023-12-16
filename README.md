@@ -4,7 +4,7 @@ GUI for asahi-bless - reboot to macOS system tray menu
 ## Install dependencies
 
 ```
-sudo dnf install make asahi-bless
+sudo dnf install gcc make gtk3-devel asahi-bless
 ```
 
 If asahi-bless version <= 0.2.1:

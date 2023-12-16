@@ -1,4 +1,4 @@
-asahi-reboot-switcher: main.go
+asahi-reboot-switcher: main.go asahibless/* util/*
 	go build
 
 install: asahi-reboot-switcher
