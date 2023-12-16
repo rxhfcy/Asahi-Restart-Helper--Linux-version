@@ -9,7 +9,9 @@ import (
 	"github.com/nohajc/asahi-reboot-switcher/util"
 )
 
-var asahiBlessCmd = util.RequireCommand("asahi-bless")
+var allowedBlessPaths = []string{"/usr/local/bin", "/usr/bin"}
+
+var asahiBlessCmd = util.RequireCommand("asahi-bless", allowedBlessPaths...)
 
 func SetBootMacOS(onlyOnce bool) error {
 	exePath, err := os.Executable()

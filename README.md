@@ -7,14 +7,16 @@ GUI for asahi-bless - reboot to macOS system tray menu
 sudo dnf install gcc make gtk3-devel asahi-bless
 ```
 
-If asahi-bless version <= 0.2.1:
+### If asahi-bless version <= 0.2.1
+
 ```
 git clone https://github.com/WhatAmISupposedToPutHere/asahi-nvram.git
 cd asahi-nvram/asahi-bless
 cargo install --path .
+sudo cp ~/.cargo/bin/asahi-bless /usr/local/bin/
 ```
 
-Also make sure `~/.cargo/bin` is in `PATH`.
+Also make sure `/usr/local/bin` is in `PATH` before `/usr/bin` or uninstall the asahi-bless package first.
 
 ### Gnome
 
