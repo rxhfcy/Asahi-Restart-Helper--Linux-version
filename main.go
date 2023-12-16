@@ -105,9 +105,12 @@ func requestReboot() error {
 	return cmd.Run()
 }
 
+var allowedBlessPaths = []string{"/usr/local/bin", "/usr/bin"}
+var asahiBlessCmd = util.RequireCommand("asahi-bless", allowedBlessPaths...)
+
 func callAsahiBless(args []string) {
 	{
-		cmd := exec.Command(args[0], args[1:]...)
+		cmd := exec.Command(asahiBlessCmd, args...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()

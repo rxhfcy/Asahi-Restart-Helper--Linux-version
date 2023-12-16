@@ -5,20 +5,14 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/nohajc/asahi-reboot-switcher/util"
 )
-
-var allowedBlessPaths = []string{"/usr/local/bin", "/usr/bin"}
-
-var asahiBlessCmd = util.RequireCommand("asahi-bless", allowedBlessPaths...)
 
 func SetBootMacOS(onlyOnce bool) error {
 	exePath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("failed to get executable path: %w", err)
 	}
-	args := []string{exePath, asahiBlessCmd, "--set-boot-macos", "-y"}
+	args := []string{exePath, "--set-boot-macos", "-y"}
 	if onlyOnce {
 		args = append(args, "-n")
 	}
@@ -38,7 +32,7 @@ func SetBoot(volIdx int) error {
 	if err != nil {
 		return fmt.Errorf("failed to get executable path: %w", err)
 	}
-	args := []string{exePath, asahiBlessCmd, "--set-boot", fmt.Sprintf("%d", volIdx), "-y"}
+	args := []string{exePath, "--set-boot", fmt.Sprintf("%d", volIdx), "-y"}
 	fmt.Printf("executing: pkexec %s\n", strings.Join(args, " "))
 	cmd := exec.Command("pkexec", args...)
 	cmd.Stdout = os.Stdout
@@ -71,7 +65,7 @@ func ListVolumes() ([]Volume, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get executable path: %w", err)
 	}
-	cmd := exec.Command("pkexec", exePath, asahiBlessCmd, "--list-volumes")
+	cmd := exec.Command("pkexec", exePath, "--list-volumes")
 	cmd.Stderr = os.Stderr
 	out, err := cmd.Output()
 	if err != nil {
