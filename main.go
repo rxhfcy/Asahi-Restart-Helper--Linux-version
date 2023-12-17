@@ -24,6 +24,10 @@ func setupAutostart(homeDir string) {
 	// Check if the autostart file already exists
 	if _, err := os.Stat(autostartFile); os.IsNotExist(err) {
 		// Create the autostart directory if it doesn't exist
+		confirmed := dialog.Message("Restart in macOS tray icon will be set to autostart on login.").Title("Confirm autostart").YesNo()
+		if !confirmed {
+			return
+		}
 		if err := os.MkdirAll(autostartDir, 0755); err != nil {
 			fmt.Fprintln(os.Stderr, "Failed to create autostart directory:", err)
 			return
