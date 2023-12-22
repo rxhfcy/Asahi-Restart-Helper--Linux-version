@@ -13,8 +13,8 @@ import (
 
 	"fyne.io/systray"
 	"github.com/nohajc/asahi-reboot-switcher/asahibless"
+	"github.com/nohajc/asahi-reboot-switcher/dialog"
 	"github.com/nohajc/asahi-reboot-switcher/util"
-	"github.com/sqweek/dialog"
 )
 
 func setupAutostart(homeDir string) {
@@ -24,7 +24,10 @@ func setupAutostart(homeDir string) {
 	// Check if the autostart file already exists
 	if _, err := os.Stat(autostartFile); os.IsNotExist(err) {
 		// Create the autostart directory if it doesn't exist
-		confirmed := dialog.Message("Restart in macOS tray icon will be set to autostart on login.").Title("Confirm autostart").YesNo()
+		confirmed := dialog.
+			Question("Restart in macOS tray icon will be set to autostart on login.").
+			Title("Confirm autostart").
+			Run()
 		if !confirmed {
 			return
 		}
@@ -167,7 +170,11 @@ func (sc *SystrayContext) onReady() {
 		go func() {
 			for range volMenuItem.ClickedCh {
 				if !volMenuItem.Checked() {
-					confirmed := dialog.Message("Change default startup disk to %s?", volName).Title("Confirm startup disk change").YesNo()
+					confirmed := dialog.
+						Question("Change default startup disk to %s?", volName).
+						Title("Confirm startup disk change").
+						OKButton("Change").
+						Run()
 					if confirmed {
 						asahibless.SetBoot(volIdx)
 					}
