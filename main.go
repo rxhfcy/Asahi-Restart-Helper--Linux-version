@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"fyne.io/systray"
 	"github.com/nohajc/asahi-reboot-switcher/asahibless"
 	"github.com/nohajc/asahi-reboot-switcher/dialog"
 	"github.com/nohajc/asahi-reboot-switcher/util"
+	"github.com/nohajc/systray"
 )
 
 func setupAutostart(homeDir string) {
@@ -131,23 +131,23 @@ func callAsahiBless(args []string) {
 var appIcon []byte
 
 type SystrayContext struct {
-	volumes      []asahibless.Volume
-	volMenuItems []*systray.MenuItem
+	volumes          []asahibless.Volume
+	volMenuItemGroup *systray.MenuItemRadioGroup
+	activeVolIdx     int
 }
 
 func (sc *SystrayContext) loadVolumes() error {
 	volumes, err := asahibless.ListVolumes()
 	sc.volumes = volumes
+	if sc.volMenuItemGroup == nil {
+		return nil
+	}
 	// fmt.Printf("Volumes: %#v\n", volumes)
 	for _, v := range volumes {
 		i := v.Idx - 1
-		if i >= len(sc.volMenuItems) {
-			continue
-		}
 		if v.Active {
-			sc.volMenuItems[i].Check()
-		} else {
-			sc.volMenuItems[i].Uncheck()
+			sc.volMenuItemGroup.Check(i)
+			break
 		}
 	}
 	return err
@@ -163,27 +163,34 @@ func (sc *SystrayContext) onReady() {
 	mLabel := systray.AddMenuItem("Default startup disk:", "")
 	mLabel.Disable()
 
-	for _, v := range sc.volumes {
-		volMenuItem := systray.AddMenuItemCheckbox(v.ShortName(), "", v.Active)
-		volName := v.ShortName()
-		volIdx := v.Idx
-		go func() {
-			for range volMenuItem.ClickedCh {
-				if !volMenuItem.Checked() {
-					confirmed := dialog.
-						Question("Change default startup disk to %s?", volName).
-						Title("Confirm startup disk change").
-						OKButton("Change").
-						Run()
-					if confirmed {
-						asahibless.SetBoot(volIdx)
-					}
-				}
-				sc.loadVolumes()
-			}
-		}()
-		sc.volMenuItems = append(sc.volMenuItems, volMenuItem)
+	volMenuItemGroup := systray.AddMenuItemRadioGroup()
+	activeIdx := 0
+	for i, v := range sc.volumes {
+		if v.Active {
+			activeIdx = i
+		}
+		_ = volMenuItemGroup.AddItem(v.ShortName(), "")
 	}
+	volMenuItemGroup.Check(activeIdx)
+
+	go func() {
+		for volIdx := range volMenuItemGroup.ClickedCh {
+			if volIdx != sc.activeVolIdx {
+				confirmed := dialog.
+					Question("Change default startup disk to %s?", sc.volumes[volIdx].ShortName()).
+					Title("Confirm startup disk change").
+					OKButton("Change").
+					Run()
+				if confirmed {
+					asahibless.SetBoot(volIdx + 1)
+					sc.activeVolIdx = volIdx
+				}
+			}
+			sc.loadVolumes()
+		}
+	}()
+	sc.volMenuItemGroup = volMenuItemGroup
+	sc.activeVolIdx = activeIdx
 
 	systray.AddSeparator()
 	mQuitOrig := systray.AddMenuItem("Quit", "Quit application")
