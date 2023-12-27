@@ -200,8 +200,15 @@ func (sc *SystrayContext) onReady() {
 		case <-mReboot.ClickedCh:
 			sc.rebootToMacOS()
 		case <-mQuitOrig.ClickedCh:
-			fmt.Println("Quit")
-			systray.Quit()
+			confirmed := dialog.
+				Question("Quit Restart in macOS tray icon?").
+				Title("Confirm quitting").
+				OKButton("Quit").
+				Run()
+			if confirmed {
+				fmt.Println("Quit")
+				systray.Quit()
+			}
 		}
 	}
 }
