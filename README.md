@@ -1,42 +1,28 @@
-# asahi-reboot-switcher
-GUI for asahi-bless - reboot to macOS system tray menu
-
-## Install dependencies
-
-```
-sudo dnf install gcc make pkg-config gtk3-devel asahi-bless
+```diff
+- TODO: We're evaluating 4 different UI options
+- and need help deciding on the best compromise:
 ```
 
-### If asahi-bless version <= 0.2.1
+Linux version:
 
-```
-git clone https://github.com/WhatAmISupposedToPutHere/asahi-nvram.git
-cd asahi-nvram/asahi-bless
-cargo install --path .
-sudo cp ~/.cargo/bin/asahi-bless /usr/local/bin/
-```
+- [Option A (README)](./README_OPTION_A.md): Boot menu.
+This option lets users select from all disks and restart **WITHOUT CHANGING** the default 'Startup Disk'.
+However, it does provide a submenu for changing the default 'Startup Disk'.
 
-Also make sure `/usr/local/bin` is in `PATH` before `/usr/bin` or uninstall the asahi-bless package first.
+- [Option B (README)](./README_OPTION_B.md): Essentially the same as [Option A](./README_OPTION_A.md),
+but with an additional optional checkbox menu item
+that allows users to **CHANGE** the default 'Startup Disk' upon restarting.
 
-### Gnome
+- **"Perhaps TOO Simple"** [Option X (README)](./README_OPTION_X.md): This option **ONLY** offers a
+"Restart in macOS..." option.
+This will **ALWAYS CHANGE** the default 'Startup Disk' to macOS (imitates Apple's Boot Camp behavior).
+It **DOES NOT** provide a submenu to change the default 'Startup Disk' back to Linux.
 
-The following extension must also be installed and enabled:
-https://extensions.gnome.org/extension/615/appindicator-support/
+- **"Simple"** [Option Y (README)](./README_OPTION_Y.md): Similar to [Option X](./README_OPTION_X.md)
+(only "Restart in macOS", change default 'Startup Disk' to macOS),
+but it also includes a submenu that allow users to **CHANGE** the default 'Startup Disk' back to Linux for convenience.
 
-## Build & install asahi-reboot-switcher
-```
-make
-sudo make install
-```
+PS. There is also a [corresponding macOS version](https://github.com/rxhfcy/Asahi-Restart-Helper--macOS-version) (currently, only Option A of the macOS app has been implemented).
 
-## How to use
-
-Launch `Restart in macOS (tray icon)` from application menu. Next time it will start automatically after system login.
-
-## Notes
-
-Tested in KDE and Gnome.
-
-### Gnome
-
-If the tray icon is rendered incorrectly (with a green tint), go to Extension Manager, open extension preferences of `AppIndicator and KStatusNotifierItem Support` and set brightness to max (1.0).
+Once we've decided on the best compromise for the Linux version (**Option Y**? **Option A**?),
+the macOS version will be updated to match the UI of the Linux version.
