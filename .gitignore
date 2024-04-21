@@ -20,4 +20,8 @@
 # Go workspace file
 go.work
 
+# macOS specific junk
+.DS_Store
+._*
+
 /asahi-reboot-switcher
