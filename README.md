@@ -22,7 +22,6 @@ It **DOES NOT** provide a submenu to change the default 'Startup Disk' back to L
 (only "Restart in macOS", change default 'Startup Disk' to macOS),
 but it also includes a submenu that allow users to **CHANGE** the default 'Startup Disk' back to Linux for convenience.
 
-PS. There is also a [corresponding macOS version](https://github.com/rxhfcy/Asahi-Restart-Helper--macOS-version) (currently, only Option A of the macOS app has been implemented).
+PS. There is also a [corresponding macOS version](https://github.com/rxhfcy/Asahi-Restart-Helper--macOS-version) of this application, which currently uses "Option Y".
 
-Once we've decided on the best compromise for the Linux version (**Option Y**? **Option A**?),
-the macOS version will be updated to match the UI of the Linux version.
+Once we've determined the best compromise for the UI and scope (probably "Option Y"?), we will make the UI of both the macOS and Linux versions match as closely as possible.
